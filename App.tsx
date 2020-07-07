@@ -11,6 +11,8 @@ import {
 } from "react-native";
 import { Camera } from "expo-camera";
 import { FontAwesome } from "@expo/vector-icons";
+import * as Permissions from "expo-permissions";
+import * as MediaLibrary from "expo-media-library";
 
 export default function App() {
   const camRef = createRef<Camera>();
@@ -22,6 +24,11 @@ export default function App() {
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestPermissionsAsync();
+      setHasPermission(status === "granted");
+    })();
+
+    (async () => {
+      const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
       setHasPermission(status === "granted");
     })();
   });
@@ -36,6 +43,16 @@ export default function App() {
       setCapturedPhoto(data.uri);
       setOpen(true);
     }
+  }
+
+  async function savePicture() {
+    const asset = await MediaLibrary.createAssetAsync(capturedPhoto)
+      .then(() => {
+        alert("Salvo com sucesso!");
+      })
+      .catch((error) => {
+        console.log("err", error);
+      });
   }
 
   return (
@@ -99,15 +116,21 @@ export default function App() {
               margin: 20,
             }}
           >
-            <TouchableOpacity
-              style={{ margin: 10 }}
-              onPress={() => setOpen(false)}
-            >
-              <FontAwesome name="window-close" size={50} color="#f00" />
-            </TouchableOpacity>
+            <View style={{ flexDirection: "row", margin: 10 }}>
+              <TouchableOpacity
+                style={{ margin: 10 }}
+                onPress={() => setOpen(false)}
+              >
+                <FontAwesome name="window-close" size={50} color="#f00" />
+              </TouchableOpacity>
+
+              <TouchableOpacity style={{ margin: 10 }} onPress={savePicture}>
+                <FontAwesome name="upload" size={50} color="#121212" />
+              </TouchableOpacity>
+            </View>
 
             <Image
-              style={{ width: "100%", height: 300, borderRadius: 20 }}
+              style={{ width: "100%", height: 450, borderRadius: 20 }}
               source={{ uri: capturedPhoto }}
             />
           </View>
